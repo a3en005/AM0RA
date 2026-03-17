@@ -1,0 +1,2580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AM0RA | Unified Intelligence Platform</title>
+
+<!-- CDN Libraries -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<style>
+/* ============================================================
+   CSS VARIABLES & RESET
+   ============================================================ */
+:root {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1a2332;
+  --bg-card: #151d2b;
+  --bg-hover: #1e293b;
+  --bg-active: #233044;
+  --border-color: #2a3a52;
+  --border-light: #334766;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-purple: #8b5cf6;
+  --accent-pink: #ec4899;
+  --accent-maven: #ff6b35;
+  --glow-blue: rgba(59, 130, 246, 0.3);
+  --glow-cyan: rgba(6, 182, 212, 0.2);
+  --glow-maven: rgba(255, 107, 53, 0.3);
+  --sidebar-width: 260px;
+  --header-height: 56px;
+  --font-mono: 'Courier New', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --transition: all 0.2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: var(--transition);
+}
+
+.sidebar-brand {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border-color);
+  gap: 12px;
+  cursor: pointer;
+}
+
+.sidebar-brand .logo {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 16px;
+  color: white;
+}
+
+.sidebar-brand h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+}
+
+.sidebar-brand h1 .zero {
+  color: var(--accent-maven);
+  text-shadow: 0 0 10px var(--glow-maven);
+  font-weight: 900;
+}
+
+.sidebar-brand .version {
+  font-size: 9px;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+}
+
+.nav-section {
+  padding: 0 16px;
+  margin-bottom: 8px;
+}
+
+.nav-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 12px 8px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+  gap: 12px;
+  margin-bottom: 2px;
+  position: relative;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: var(--bg-active);
+  color: var(--accent-cyan);
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.nav-item.maven-item.active {
+  color: var(--accent-maven);
+  border-left-color: var(--accent-maven);
+  box-shadow: 0 0 15px var(--glow-maven);
+}
+
+.nav-item i {
+  width: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.nav-item .badge {
+  margin-left: auto;
+  background: var(--accent-red);
+  color: white;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.nav-item .badge.green { background: var(--accent-green); }
+.nav-item .badge.amber { background: var(--accent-amber); color: #000; }
+.nav-item .badge.maven { background: var(--accent-maven); }
+.nav-item .badge.live {
+  background: var(--accent-maven);
+  animation: pulse-live 2s infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; box-shadow: 0 0 5px var(--accent-maven); }
+  50% { opacity: 0.7; box-shadow: 0 0 15px var(--accent-maven); }
+}
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.user-info:hover { background: var(--bg-hover); }
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+}
+
+.user-details { flex: 1; }
+.user-details .name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.user-details .role { font-size: 11px; color: var(--text-muted); }
+.user-details .clearance {
+  font-size: 9px;
+  color: var(--accent-amber);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* HEADER */
+.header {
+  height: var(--header-height);
+  min-height: var(--header-height);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+}
+
+.header-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.header-breadcrumb .module-name {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.header-breadcrumb .module-name.maven {
+  color: var(--accent-maven);
+  text-shadow: 0 0 10px var(--glow-maven);
+}
+
+.header-breadcrumb .separator { color: var(--text-muted); }
+.header-breadcrumb .page-name { color: var(--text-secondary); }
+
+.header-search {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.header-search input {
+  width: 100%;
+  padding: 8px 16px 8px 36px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: var(--transition);
+}
+
+.header-search input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px var(--glow-cyan);
+}
+
+.header-search input::placeholder { color: var(--text-muted); }
+
+.header-search i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  position: relative;
+  font-size: 14px;
+}
+
+.header-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent-cyan);
+}
+
+.header-btn .notif-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-red);
+  border-radius: 50%;
+  border: 2px solid var(--bg-tertiary);
+}
+
+.header-btn .live-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-maven);
+  border-radius: 50%;
+  border: 2px solid var(--bg-tertiary);
+  animation: pulse-live 2s infinite;
+}
+
+.classification-banner {
+  background: var(--accent-amber);
+  color: #000;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px;
+  letter-spacing: 2px;
+}
+
+/* PAGE CONTENT */
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+/* ============================================================
+   CARDS & WIDGETS
+   ============================================================ */
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-2-1 { grid-template-columns: 2fr 1fr; }
+.grid-1-2 { grid-template-columns: 1fr 2fr; }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.card.maven-card {
+  border-color: var(--accent-maven);
+  box-shadow: 0 0 20px var(--glow-maven);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-header h3 i { color: var(--accent-cyan); font-size: 14px; }
+.card-header h3 i.maven { color: var(--accent-maven); }
+
+.card-header .card-actions { display: flex; gap: 6px; }
+
+.card-header .card-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: var(--transition);
+}
+
+.card-header .card-action-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.card-body { padding: 18px; }
+.card-body.no-pad { padding: 0; }
+
+/* STAT CARDS */
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 20px var(--glow-cyan);
+}
+
+.stat-card.maven-stat:hover {
+  border-color: var(--accent-maven);
+  box-shadow: 0 0 20px var(--glow-maven);
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+.stat-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+.stat-icon.amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+.stat-icon.red { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+.stat-icon.purple { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+.stat-icon.cyan { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+.stat-icon.maven { background: rgba(255, 107, 53, 0.15); color: var(--accent-maven); }
+
+.stat-info { flex: 1; }
+.stat-info .label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.stat-info .value { font-size: 26px; font-weight: 700; line-height: 1; }
+.stat-info .change {
+  font-size: 11px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.stat-info .change.up { color: var(--accent-green); }
+.stat-info .change.down { color: var(--accent-red); }
+
+/* STATUS INDICATORS */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.green { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
+.status-dot.red { background: var(--accent-red); box-shadow: 0 0 6px var(--accent-red); }
+.status-dot.amber { background: var(--accent-amber); box-shadow: 0 0 6px var(--accent-amber); }
+.status-dot.blue { background: var(--accent-blue); box-shadow: 0 0 6px var(--accent-blue); }
+.status-dot.maven { background: var(--accent-maven); box-shadow: 0 0 6px var(--accent-maven); animation: pulse-live 2s infinite; }
+
+/* TABLES */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+}
+
+.data-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(42, 58, 82, 0.5);
+  color: var(--text-secondary);
+}
+
+.data-table tr:hover td { background: var(--bg-hover); }
+.data-table .mono { font-family: var(--font-mono); font-size: 12px; }
+
+/* TAG / BADGE */
+.tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tag.blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+.tag.green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+.tag.amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+.tag.red { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+.tag.purple { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+.tag.cyan { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+.tag.maven { background: rgba(255, 107, 53, 0.15); color: var(--accent-maven); }
+
+/* BUTTONS */
+.btn {
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: var(--accent-blue);
+  color: white;
+  border-color: var(--accent-blue);
+}
+
+.btn-primary:hover { background: #2563eb; }
+
+.btn-maven {
+  background: var(--accent-maven);
+  color: white;
+  border-color: var(--accent-maven);
+}
+
+.btn-maven:hover { background: #ff5722; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+}
+
+.tab:hover { color: var(--text-primary); }
+.tab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+.tab.active.maven { color: var(--accent-maven); border-bottom-color: var(--accent-maven); }
+
+/* ACTIVITY FEED */
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(42, 58, 82, 0.3);
+}
+
+.activity-item:last-child { border-bottom: none; }
+
+.activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.activity-content { flex: 1; }
+.activity-content .title { font-size: 13px; color: var(--text-primary); }
+.activity-content .title strong { color: var(--accent-cyan); }
+.activity-content .title strong.maven { color: var(--accent-maven); }
+.activity-content .meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+/* MODULE PAGES */
+.module-page { display: none; }
+.module-page.active { display: block; }
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+/* MAP */
+.map-container {
+  height: 400px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+/* GRAPH */
+.graph-container {
+  height: 450px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
+/* CHART CONTAINER */
+.chart-container {
+  position: relative;
+  height: 250px;
+}
+
+/* ============================================================
+   MAVEN VIDEO FEED WITH REAL-TIME VISUALS
+   ============================================================ */
+.video-feed-container {
+  position: relative;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 16/9;
+}
+
+.video-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+/* HUD Elements */
+.hud-top {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-maven);
+}
+
+.hud-box {
+  background: rgba(0,0,0,0.8);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-maven);
+  line-height: 1.4;
+}
+
+.hud-bottom {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.hud-telemetry {
+  background: rgba(0,0,0,0.8);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-maven);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-maven);
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 12px;
+}
+
+.hud-telemetry .label {
+  color: var(--text-muted);
+}
+
+.hud-telemetry .value {
+  color: var(--accent-maven);
+  font-weight: 600;
+}
+
+/* Crosshair */
+.crosshair {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.crosshair::before,
+.crosshair::after {
+  content: '';
+  position: absolute;
+  background: var(--accent-maven);
+}
+
+.crosshair::before {
+  width: 2px;
+  height: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.crosshair::after {
+  height: 2px;
+  width: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.crosshair-circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--accent-maven);
+  border-radius: 50%;
+  animation: pulse-crosshair 2s infinite;
+}
+
+@keyframes pulse-crosshair {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Detection Boxes */
+.detection-box {
+  position: absolute;
+  border: 2px solid var(--accent-maven);
+  box-shadow: 0 0 10px var(--glow-maven);
+  pointer-events: none;
+  animation: detection-flash 1s ease-out;
+}
+
+@keyframes detection-flash {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.detection-label {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  background: var(--accent-maven);
+  color: white;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  border-radius: 2px;
+}
+
+.detection-confidence {
+  position: absolute;
+  bottom: -20px;
+  right: 0;
+  background: rgba(0,0,0,0.9);
+  color: var(--accent-maven);
+  padding: 2px 6px;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  border: 1px solid var(--accent-maven);
+  border-radius: 2px;
+}
+
+/* Target Tracking Line */
+.tracking-line {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-maven), transparent);
+  pointer-events: none;
+  animation: tracking-pulse 1.5s infinite;
+}
+
+@keyframes tracking-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Scan Lines */
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-maven), transparent);
+  animation: scan 3s linear infinite;
+  opacity: 0.3;
+}
+
+@keyframes scan {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+/* Corner Brackets */
+.corner-brackets {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  right: 10%;
+  bottom: 10%;
+  pointer-events: none;
+}
+
+.corner-brackets::before,
+.corner-brackets::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--accent-maven);
+}
+
+.corner-brackets::before {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-brackets::after {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+/* Grid Overlay */
+.grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0.1;
+  background-image: 
+    linear-gradient(var(--accent-maven) 1px, transparent 1px),
+    linear-gradient(90deg, var(--accent-maven) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* LIVE FEED */
+.live-feed {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.feed-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(42,58,82,0.3);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  animation: slideIn 0.3s ease;
+}
+
+.feed-item .timestamp {
+  color: var(--accent-maven);
+  font-weight: 600;
+}
+
+.feed-item .source {
+  color: var(--accent-cyan);
+  margin: 0 8px;
+}
+
+.feed-item .content {
+  color: var(--text-secondary);
+}
+
+/* RADAR DISPLAY */
+.radar-container {
+  position: relative;
+  aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(255,107,53,0.05) 0%, rgba(10,14,23,1) 100%);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.radar-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.radar-blip {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--accent-maven);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent-maven);
+  animation: blip-pulse 2s infinite;
+}
+
+@keyframes blip-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+/* HEATMAP */
+.heatmap-container {
+  position: relative;
+  height: 300px;
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.heatmap-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* TELEMETRY GRAPH */
+.telemetry-graph {
+  position: relative;
+  height: 150px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.telemetry-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* CHAT */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px);
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.chat-msg {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  max-width: 80%;
+}
+
+.chat-msg.user { margin-left: auto; flex-direction: row-reverse; }
+
+.chat-msg-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.chat-msg.ai .chat-msg-avatar {
+  background: linear-gradient(135deg, var(--accent-maven), var(--accent-red));
+  color: white;
+}
+
+.chat-msg.user .chat-msg-avatar {
+  background: var(--accent-purple);
+  color: white;
+}
+
+.chat-msg-body {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.chat-msg.user .chat-msg-body {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.chat-input-area {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input-area input {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+
+.chat-input-area input:focus {
+  border-color: var(--accent-maven);
+}
+
+/* PROGRESS BAR */
+.progress-bar {
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.progress-fill.blue { background: var(--accent-blue); }
+.progress-fill.green { background: var(--accent-green); }
+.progress-fill.amber { background: var(--accent-amber); }
+.progress-fill.cyan { background: var(--accent-cyan); }
+.progress-fill.maven { background: var(--accent-maven); }
+
+/* TIMELINE */
+.timeline-container {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-color);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 16px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-cyan);
+  background: var(--bg-primary);
+}
+
+.timeline-item.maven::before {
+  border-color: var(--accent-maven);
+  box-shadow: 0 0 10px var(--accent-maven);
+}
+
+.timeline-item .tl-time {
+  font-size: 11px;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.timeline-item.maven .tl-time {
+  color: var(--accent-maven);
+}
+
+.timeline-item .tl-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+.timeline-item .tl-desc { font-size: 12px; color: var(--text-muted); }
+
+/* NOTIFICATION PANEL */
+.notif-panel {
+  position: fixed;
+  top: var(--header-height);
+  right: -380px;
+  width: 380px;
+  height: calc(100vh - var(--header-height));
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  z-index: 200;
+  transition: right 0.3s ease;
+  overflow-y: auto;
+}
+
+.notif-panel.open { right: 0; }
+
+.notif-panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notif-panel-header h3 { font-size: 15px; font-weight: 600; }
+
+.notif-item {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(42, 58, 82, 0.3);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.notif-item:hover { background: var(--bg-hover); }
+.notif-item .notif-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.notif-item .notif-body { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.notif-item .notif-time { font-size: 11px; color: var(--text-muted); }
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .grid-4, .grid-3, .grid-2, .grid-2-1, .grid-1-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* LOADING ANIMATION */
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.pulse { animation: pulse 2s infinite; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in { animation: slideIn 0.3s ease; }
+
+/* SEARCH RESULTS */
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  margin-top: 4px;
+  display: none;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 300;
+}
+
+.search-results.show { display: block; }
+
+.search-result-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(42,58,82,0.3);
+  transition: var(--transition);
+}
+
+.search-result-item:hover { background: var(--bg-hover); }
+.search-result-item i { color: var(--accent-cyan); width: 20px; text-align: center; }
+.search-result-item .sr-type { font-size: 10px; color: var(--text-muted); margin-left: auto; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="classification-banner">UNCLASSIFIED // FOR DEMONSTRATION PURPOSES ONLY</div>
+
+<div class="app-container">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="sidebar-brand" onclick="navigate('dashboard')">
+      <div class="logo">A</div>
+      <h1>AM<span class="zero">0</span>RA</h1>
+      <span class="version">v5.0</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Command</div>
+        <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+          <i class="fas fa-th-large"></i> Command Dashboard
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Maven — AI Warfare</div>
+        <div class="nav-item maven-item" data-page="maven-live" onclick="navigate('maven-live')">
+          <i class="fas fa-video"></i> Live FMV Analysis
+          <span class="badge live">LIVE</span>
+        </div>
+        <div class="nav-item maven-item" data-page="maven-isr" onclick="navigate('maven-isr')">
+          <i class="fas fa-satellite"></i> ISR Intelligence
+        </div>
+        <div class="nav-item maven-item" data-page="maven-targeting" onclick="navigate('maven-targeting')">
+          <i class="fas fa-crosshairs"></i> Target Recognition
+        </div>
+        <div class="nav-item maven-item" data-page="maven-feed" onclick="navigate('maven-feed')">
+          <i class="fas fa-stream"></i> Real-Time Data Feed
+          <span class="badge maven">∞</span>
+        </div>
+        <div class="nav-item maven-item" data-page="maven-analytics" onclick="navigate('maven-analytics')">
+          <i class="fas fa-chart-line"></i> Analytics Dashboard
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Gotham — Intelligence</div>
+        <div class="nav-item" data-page="graph" onclick="navigate('graph')">
+          <i class="fas fa-project-diagram"></i> Knowledge Graph
+        </div>
+        <div class="nav-item" data-page="geomap" onclick="navigate('geomap')">
+          <i class="fas fa-globe-americas"></i> Geospatial Map
+        </div>
+        <div class="nav-item" data-page="timeline" onclick="navigate('timeline')">
+          <i class="fas fa-stream"></i> Timeline Analysis
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">AIP — AI Platform</div>
+        <div class="nav-item" data-page="aichat" onclick="navigate('aichat')">
+          <i class="fas fa-robot"></i> AI Assistant
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Apollo — Operations</div>
+        <div class="nav-item" data-page="health" onclick="navigate('health')">
+          <i class="fas fa-heartbeat"></i> System Health
+          <span class="badge green">OK</span>
+        </div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">OA</div>
+        <div class="user-details">
+          <div class="name">Operator Alpha</div>
+          <div class="role">ISR Analyst</div>
+          <div class="clearance">TS/SCI</div>
+        </div>
+        <i class="fas fa-ellipsis-v" style="color: var(--text-muted);"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="main-content">
+    <header class="header">
+      <div class="header-breadcrumb">
+        <span class="module-name" id="breadcrumb-module">Command</span>
+        <span class="separator">/</span>
+        <span class="page-name" id="breadcrumb-page">Dashboard</span>
+      </div>
+
+      <div class="header-search">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search targets, feeds, intelligence... (Ctrl+K)" id="globalSearch">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+
+      <div class="header-actions">
+        <button class="header-btn" title="Live Feeds" onclick="navigate('maven-feed')">
+          <i class="fas fa-rss"></i>
+          <div class="live-indicator"></div>
+        </button>
+        <button class="header-btn" title="Notifications" onclick="toggleNotifications()">
+          <i class="fas fa-bell"></i>
+          <div class="notif-dot"></div>
+        </button>
+        <button class="header-btn" title="Settings">
+          <i class="fas fa-cog"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===================== PAGES ===================== -->
+    <div class="page-content" id="pageContent">
+
+      <!-- ======= DASHBOARD ======= -->
+      <div class="module-page active" id="page-dashboard">
+        <div class="page-title">AM<span style="color:var(--accent-maven);">0</span>RA Command Dashboard</div>
+        <div class="page-subtitle">Unified operational overview with real-time Maven AI integration</div>
+
+        <div class="grid grid-4" style="margin-bottom:20px;">
+          <div class="stat-card maven-stat" onclick="navigate('maven-live')">
+            <div class="stat-icon maven"><i class="fas fa-video"></i></div>
+            <div class="stat-info">
+              <div class="label">Live FMV Feeds</div>
+              <div class="value" id="liveFeeds">2</div>
+              <div class="change up"><i class="fas fa-circle" style="animation:pulse-live 2s infinite;"></i> Active Processing</div>
+            </div>
+          </div>
+          <div class="stat-card maven-stat" onclick="navigate('maven-targeting')">
+            <div class="stat-icon red"><i class="fas fa-crosshairs"></i></div>
+            <div class="stat-info">
+              <div class="label">Targets Detected</div>
+              <div class="value" id="targetsDetected">127</div>
+              <div class="change up"><i class="fas fa-arrow-up"></i> <span id="targetsChange">+14</span> this hour</div>
+            </div>
+          </div>
+          <div class="stat-card maven-stat">
+            <div class="stat-icon blue"><i class="fas fa-eye"></i></div>
+            <div class="stat-info">
+              <div class="label">Objects Tracked</div>
+              <div class="value" id="objectsTracked">342</div>
+              <div class="change up"><i class="fas fa-arrow-up"></i> <span id="objectsChange">+23</span> active</div>
+            </div>
+          </div>
+          <div class="stat-card maven-stat">
+            <div class="stat-icon green"><i class="fas fa-brain"></i></div>
+            <div class="stat-info">
+              <div class="label">AI Accuracy</div>
+              <div class="value">96.8%</div>
+              <div class="change up"><i class="fas fa-check-circle"></i> Optimal</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-2" style="margin-bottom:20px;">
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-area maven"></i> Detection Activity (Real-Time)</h3>
+            </div>
+            <div class="card-body no-pad">
+              <div class="telemetry-graph">
+                <canvas id="realtimeChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-radar maven"></i> Threat Radar</h3>
+            </div>
+            <div class="card-body no-pad">
+              <div class="radar-container">
+                <canvas id="radarCanvas"></canvas>
+                <div id="radarBlips"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-3">
+          <div class="card">
+            <div class="card-header"><h3><i class="fas fa-heartbeat"></i> System Health</h3></div>
+            <div class="card-body">
+              <div style="margin-bottom:12px;"><span class="status"><span class="status-dot maven"></span> Maven Core</span><span style="float:right;font-size:12px;color:var(--text-muted);">99.9%</span><div class="progress-bar"><div class="progress-fill maven" style="width:99.9%"></div></div></div>
+              <div style="margin-bottom:12px;"><span class="status"><span class="status-dot green"></span> Gotham Core</span><span style="float:right;font-size:12px;color:var(--text-muted);">99.8%</span><div class="progress-bar"><div class="progress-fill green" style="width:99.8%"></div></div></div>
+              <div style="margin-bottom:12px;"><span class="status"><span class="status-dot green"></span> Edge Network</span><span style="float:right;font-size:12px;color:var(--text-muted);">97.8%</span><div class="progress-bar"><div class="progress-fill green" style="width:97.8%"></div></div></div>
+            </div>
+          </div>
+          <div class="card maven-card">
+            <div class="card-header"><h3><i class="fas fa-list maven"></i> Recent Detections</h3></div>
+            <div class="card-body" style="max-height:250px;overflow-y:auto;" id="recentDetections"></div>
+          </div>
+          <div class="card maven-card">
+            <div class="card-header"><h3><i class="fas fa-bolt maven"></i> Live Activity</h3></div>
+            <div class="card-body" style="max-height:250px;overflow-y:auto;" id="liveActivity"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= MAVEN LIVE FMV ======= -->
+      <div class="module-page" id="page-maven-live">
+        <div class="page-title">Maven Live FMV Analysis</div>
+        <div class="page-subtitle">Real-time full-motion video with AI object detection and tracking</div>
+        
+        <div class="grid grid-2" style="margin-bottom:20px;">
+          <!-- Feed 1 -->
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-video maven"></i> Feed 1: UAV-REAPER-03</h3>
+              <span class="tag maven">LIVE</span>
+            </div>
+            <div class="card-body no-pad">
+              <div class="video-feed-container">
+                <canvas id="videoCanvas1" class="video-canvas" width="800" height="450"></canvas>
+                <div class="video-overlay">
+                  <!-- HUD Top -->
+                  <div class="hud-top">
+                    <div class="hud-box">
+                      <div>UAV-REAPER-03</div>
+                      <div>MODE: AUTO-TRACK</div>
+                      <div>TIME: <span id="feed1Time">00:00:00</span></div>
+                    </div>
+                    <div class="hud-box" style="text-align:right;">
+                      <div>DETECTIONS: <span id="feed1Detections">0</span></div>
+                      <div>TRACKS: <span id="feed1Tracks">0</span></div>
+                      <div>CONF AVG: <span id="feed1ConfAvg">0.0</span>%</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Crosshair -->
+                  <div class="crosshair">
+                    <div class="crosshair-circle"></div>
+                  </div>
+                  
+                  <!-- Corner Brackets -->
+                  <div class="corner-brackets"></div>
+                  
+                  <!-- Grid Overlay -->
+                  <div class="grid-overlay"></div>
+                  
+                  <!-- Scan Line -->
+                  <div class="scan-line"></div>
+                  
+                  <!-- Detection Boxes (dynamically added) -->
+                  <div id="detectionBoxes1"></div>
+                  
+                  <!-- HUD Bottom -->
+                  <div class="hud-bottom">
+                    <div class="hud-telemetry">
+                      <span class="label">LAT:</span><span class="value" id="feed1Lat">36.2021°N</span>
+                      <span class="label">LON:</span><span class="value" id="feed1Lon">37.1343°E</span>
+                      <span class="label">ALT:</span><span class="value">15,000 ft</span>
+                      <span class="label">SPD:</span><span class="value">120 kts</span>
+                      <span class="label">HDG:</span><span class="value" id="feed1Hdg">045°</span>
+                      <span class="label">ZOOM:</span><span class="value">2.5x</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feed 2 -->
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-video maven"></i> Feed 2: SAT-KH-12</h3>
+              <span class="tag maven">LIVE</span>
+            </div>
+            <div class="card-body no-pad">
+              <div class="video-feed-container">
+                <canvas id="videoCanvas2" class="video-canvas" width="800" height="450"></canvas>
+                <div class="video-overlay">
+                  <div class="hud-top">
+                    <div class="hud-box">
+                      <div>SAT-KH-12</div>
+                      <div>TARGET: AOI DELTA-3</div>
+                      <div>TIME: <span id="feed2Time">00:00:00</span></div>
+                    </div>
+                    <div class="hud-box" style="text-align:right;">
+                      <div>DETECTIONS: <span id="feed2Detections">0</span></div>
+                      <div>TRACKS: <span id="feed2Tracks">0</span></div>
+                      <div>RES: 0.5m/px</div>
+                    </div>
+                  </div>
+                  <div class="crosshair">
+                    <div class="crosshair-circle"></div>
+                  </div>
+                  <div class="corner-brackets"></div>
+                  <div class="grid-overlay"></div>
+                  <div class="scan-line" style="animation-delay: 1s;"></div>
+                  <div id="detectionBoxes2"></div>
+                  <div class="hud-bottom">
+                    <div class="hud-telemetry">
+                      <span class="label">LAT:</span><span class="value">36.1987°N</span>
+                      <span class="label">LON:</span><span class="value">37.1456°E</span>
+                      <span class="label">ALT:</span><span class="value">300 mi</span>
+                      <span class="label">ORB:</span><span class="value">LEO</span>
+                      <span class="label">SUN:</span><span class="value">45°</span>
+                      <span class="label">ZOOM:</span><span class="value">4.0x</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card maven-card">
+          <div class="card-header">
+            <h3><i class="fas fa-list maven"></i> Detection Log (Real-Time)</h3>
+            <div class="card-actions">
+              <button class="btn btn-sm btn-maven"><i class="fas fa-download"></i> Export</button>
+            </div>
+          </div>
+          <div class="card-body no-pad">
+            <div style="max-height:300px;overflow-y:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Feed</th>
+                    <th>Object</th>
+                    <th>Confidence</th>
+                    <th>Location</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="detectionLogBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= MAVEN ISR ======= -->
+      <div class="module-page" id="page-maven-isr">
+        <div class="page-title">Maven ISR Intelligence</div>
+        <div class="page-subtitle">Intelligence, Surveillance, and Reconnaissance with real-time analytics</div>
+        
+        <div class="grid grid-3" style="margin-bottom:20px;">
+          <div class="stat-card maven-stat">
+            <div class="stat-icon maven"><i class="fas fa-eye"></i></div>
+            <div class="stat-info">
+              <div class="label">Total Observations</div>
+              <div class="value" id="totalObs">8,342</div>
+              <div class="change up"><i class="fas fa-arrow-up"></i> +<span id="obsIncrease">127</span> today</div>
+            </div>
+          </div>
+          <div class="stat-card maven-stat">
+            <div class="stat-icon amber"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="stat-info">
+              <div class="label">High Priority Targets</div>
+              <div class="value" id="hptCount">23</div>
+              <div class="change up"><i class="fas fa-arrow-up"></i> 4 new</div>
+            </div>
+          </div>
+          <div class="stat-card maven-stat">
+            <div class="stat-icon cyan"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-info">
+              <div class="label">Pattern Changes</div>
+              <div class="value">7</div>
+              <div class="change down"><i class="fas fa-arrow-down"></i> -2 from yesterday</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-globe-americas maven"></i> ISR Coverage Map</h3>
+            </div>
+            <div class="card-body no-pad">
+              <div class="map-container" id="isrMap" style="height:400px;"></div>
+            </div>
+          </div>
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-fire maven"></i> Activity Heatmap</h3>
+            </div>
+            <div class="card-body no-pad">
+              <div class="heatmap-container">
+                <canvas id="heatmapCanvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= MAVEN TARGETING ======= -->
+      <div class="module-page" id="page-maven-targeting">
+        <div class="page-title">Maven Target Recognition</div>
+        <div class="page-subtitle">AI-driven target identification with real-time tracking</div>
+        
+        <div class="card maven-card">
+          <div class="card-header">
+            <h3><i class="fas fa-crosshairs maven"></i> Identified Targets (Live Updates)</h3>
+            <div class="card-actions">
+              <button class="btn btn-sm btn-ghost"><i class="fas fa-filter"></i> Filter</button>
+              <button class="btn btn-sm btn-maven"><i class="fas fa-plus"></i> Manual Target</button>
+            </div>
+          </div>
+          <div class="card-body no-pad">
+            <div style="max-height:500px;overflow-y:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Target ID</th>
+                    <th>Type</th>
+                    <th>Priority</th>
+                    <th>Confidence</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="targetTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= MAVEN ANALYTICS ======= -->
+      <div class="module-page" id="page-maven-analytics">
+        <div class="page-title">Maven Analytics Dashboard</div>
+        <div class="page-subtitle">Real-time visual analytics and pattern recognition</div>
+        
+        <div class="grid grid-2" style="margin-bottom:20px;">
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-line maven"></i> Detection Trends (24h)</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container"><canvas id="trendChart"></canvas></div>
+            </div>
+          </div>
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-chart-pie maven"></i> Object Classification</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container"><canvas id="classChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-3">
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-tachometer-alt maven"></i> Processing Speed</h3>
+            </div>
+            <div class="card-body">
+              <div class="chart-container"><canvas id="speedChart"></canvas></div>
+            </div>
+          </div>
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-bullseye maven"></i> Accuracy Metrics</h3>
+            </div>
+            <div class="card-body">
+              <div style="margin-bottom:12px;"><strong>Object Detection:</strong> 96.8%<div class="progress-bar"><div class="progress-fill maven" style="width:96.8%"></div></div></div>
+              <div style="margin-bottom:12px;"><strong>Classification:</strong> 94.2%<div class="progress-bar"><div class="progress-fill cyan" style="width:94.2%"></div></div></div>
+              <div style="margin-bottom:12px;"><strong>Tracking:</strong> 98.1%<div class="progress-bar"><div class="progress-fill green" style="width:98.1%"></div></div></div>
+              <div><strong>Pattern Recognition:</strong> 91.5%<div class="progress-bar"><div class="progress-fill blue" style="width:91.5%"></div></div></div>
+            </div>
+          </div>
+          <div class="card maven-card">
+            <div class="card-header">
+              <h3><i class="fas fa-server maven"></i> Resource Usage</h3>
+            </div>
+            <div class="card-body">
+              <div style="margin-bottom:12px;"><strong>GPU Utilization:</strong> 87%<div class="progress-bar"><div class="progress-fill amber" style="width:87%"></div></div></div>
+              <div style="margin-bottom:12px;"><strong>Memory:</strong> 72%<div class="progress-bar"><div class="progress-fill cyan" style="width:72%"></div></div></div>
+              <div style="margin-bottom:12px;"><strong>Network:</strong> 45%<div class="progress-bar"><div class="progress-fill green" style="width:45%"></div></div></div>
+              <div><strong>Storage I/O:</strong> 38%<div class="progress-bar"><div class="progress-fill blue" style="width:38%"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= MAVEN FEED ======= -->
+      <div class="module-page" id="page-maven-feed">
+        <div class="page-title">Maven Real-Time Data Feed</div>
+        <div class="page-subtitle">Live streaming intelligence with filtering</div>
+        
+        <div class="grid grid-2-1">
+          <div class="card maven-card" style="height:calc(100vh - 200px);">
+            <div class="card-header">
+              <h3><i class="fas fa-stream maven"></i> Live Feed Stream</h3>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span class="status"><span class="status-dot maven"></span> <span id="feedRate">0.0</span> msg/sec</span>
+              </div>
+            </div>
+            <div class="card-body no-pad">
+              <div class="live-feed" id="liveFeedContainer"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card maven-card" style="margin-bottom:16px;">
+              <div class="card-header"><h3><i class="fas fa-chart-bar maven"></i> Feed Statistics</h3></div>
+              <div class="card-body">
+                <div style="margin-bottom:12px;"><strong>Total Messages:</strong> <span id="totalMessages">0</span></div>
+                <div style="margin-bottom:12px;"><strong>MAVEN:</strong> <span id="mavenCount">0</span></div>
+                <div style="margin-bottom:12px;"><strong>SIGINT:</strong> <span id="sigintCount">0</span></div>
+                <div style="margin-bottom:12px;"><strong>IMINT:</strong> <span id="imintCount">0</span></div>
+                <div style="margin-bottom:12px;"><strong>GEOINT:</strong> <span id="geointCount">0</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other pages (Graph, Map, Timeline, Chat, Health) remain similar to before -->
+      <div class="module-page" id="page-graph">
+        <div class="page-title">Knowledge Graph</div>
+        <div class="page-subtitle">Entity relationships</div>
+        <div class="card">
+          <div class="card-body">Graph visualization would go here</div>
+        </div>
+      </div>
+
+      <div class="module-page" id="page-geomap">
+        <div class="page-title">Geospatial Map</div>
+        <div class="card">
+          <div class="card-body no-pad">
+            <div class="map-container" id="mainMap" style="height:500px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="module-page" id="page-timeline">
+        <div class="page-title">Timeline Analysis</div>
+        <div class="card">
+          <div class="card-body">Timeline would go here</div>
+        </div>
+      </div>
+
+      <div class="module-page" id="page-aichat">
+        <div class="page-title">AI Assistant</div>
+        <div class="card" style="height:calc(100vh - 200px);">
+          <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+              <div class="chat-msg ai">
+                <div class="chat-msg-avatar"><i class="fas fa-robot"></i></div>
+                <div class="chat-msg-body">Welcome to AM<span style="color:var(--accent-maven);">0</span>RA AI Assistant with Maven integration. Ask me about targets, detections, or intelligence analysis.</div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <input type="text" placeholder="Ask about Maven detections..." id="chatInput" onkeydown="if(event.key==='Enter')sendMessage()">
+              <button class="btn btn-maven" onclick="sendMessage()"><i class="fas fa-paper-plane"></i> Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="module-page" id="page-health">
+        <div class="page-title">System Health</div>
+        <div class="card">
+          <div class="card-body">System metrics would go here</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-panel-header">
+    <h3><i class="fas fa-bell"></i> Notifications</h3>
+    <button class="btn btn-sm btn-ghost" onclick="toggleNotifications()"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="notifContent"></div>
+</div>
+
+<script>
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+let currentPage = 'dashboard';
+let chartsInitialized = {};
+let animationFrames = {};
+
+const moduleMap = {
+  dashboard: ['Command', 'Dashboard'],
+  'maven-live': ['Maven', 'Live FMV Analysis', true],
+  'maven-isr': ['Maven', 'ISR Intelligence', true],
+  'maven-targeting': ['Maven', 'Target Recognition', true],
+  'maven-feed': ['Maven', 'Real-Time Feed', true],
+  'maven-analytics': ['Maven', 'Analytics Dashboard', true],
+  graph: ['Gotham', 'Knowledge Graph'],
+  geomap: ['Gotham', 'Geospatial Map'],
+  timeline: ['Gotham', 'Timeline'],
+  aichat: ['AIP', 'AI Assistant'],
+  health: ['Apollo', 'System Health']
+};
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === page);
+  });
+  document.querySelectorAll('.module-page').forEach(p => {
+    p.classList.toggle('active', p.id === 'page-' + page);
+  });
+  
+  const [mod, pg, isMaven] = moduleMap[page] || ['Unknown', 'Unknown', false];
+  const modElem = document.getElementById('breadcrumb-module');
+  modElem.textContent = mod;
+  modElem.className = isMaven ? 'module-name maven' : 'module-name';
+  document.getElementById('breadcrumb-page').textContent = pg;
+  
+  setTimeout(() => initPage(page), 100);
+}
+
+function initPage(page) {
+  switch(page) {
+    case 'dashboard': initDashboard(); break;
+    case 'maven-live': initMavenLive(); break;
+    case 'maven-isr': initMavenISR(); break;
+    case 'maven-targeting': initMavenTargeting(); break;
+    case 'maven-analytics': initMavenAnalytics(); break;
+    case 'maven-feed': initMavenFeed(); break;
+    case 'geomap': initMap(); break;
+  }
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function initDashboard() {
+  if (!chartsInitialized.dashboard) {
+    chartsInitialized.dashboard = true;
+    startRealtimeChart();
+    startRadar();
+    startDashboardUpdates();
+  }
+}
+
+// Real-time detection chart
+function startRealtimeChart() {
+  const canvas = document.getElementById('realtimeChart');
+  const ctx = canvas.getContext('2d');
+  const dataPoints = Array(60).fill(0);
+  
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+    
+    // Add new data point
+    dataPoints.push(Math.random() * 40 + 20);
+    if (dataPoints.length > 60) dataPoints.shift();
+    
+    // Clear
+    ctx.fillStyle = '#1a2332';
+    ctx.fillRect(0, 0, w, h);
+    
+    // Grid
+    ctx.strokeStyle = 'rgba(255, 107, 53, 0.1)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      const y = (h / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+    
+    // Draw line
+    ctx.beginPath();
+    ctx.strokeStyle = '#ff6b35';
+    ctx.lineWidth = 2;
+    dataPoints.forEach((val, i) => {
+      const x = (w / 60) * i;
+      const y = h - (val / 60 * h);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    
+    // Glow effect
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#ff6b35';
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    animationFrames.realtimeChart = requestAnimationFrame(draw);
+  }
+  
+  draw();
+}
+
+// Radar visualization
+function startRadar() {
+  const canvas = document.getElementById('radarCanvas');
+  const ctx = canvas.getContext('2d');
+  let angle = 0;
+  const blips = [];
+  
+  // Generate random blips
+  for (let i = 0; i < 8; i++) {
+    blips.push({
+      angle: Math.random() * 360,
+      distance: Math.random() * 0.8 + 0.2,
+      pulse: Math.random() * Math.PI * 2
+    });
+  }
+  
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = Math.min(w, h) / 2 - 20;
+    
+    // Clear
+    ctx.fillStyle = 'rgba(10, 14, 23, 0.1)';
+    ctx.fillRect(0, 0, w, h);
+    
+    // Circles
+    ctx.strokeStyle = 'rgba(255, 107, 53, 0.2)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i <= 4; i++) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * (i / 4), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
+    // Cross
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - radius);
+    ctx.lineTo(cx, cy + radius);
+    ctx.moveTo(cx - radius, cy);
+    ctx.lineTo(cx + radius, cy);
+    ctx.stroke();
+    
+    // Sweep
+    angle += 2;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    grad.addColorStop(0, 'rgba(255, 107, 53, 0.3)');
+    grad.addColorStop(1, 'transparent');
+    
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate((angle * Math.PI) / 180);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, -Math.PI / 6, Math.PI / 6);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.restore();
+    
+    // Blips
+    blips.forEach(blip => {
+      blip.pulse += 0.05;
+      const pulseSize = Math.sin(blip.pulse) * 0.2 + 0.8;
+      const x = cx + Math.cos((blip.angle * Math.PI) / 180) * radius * blip.distance;
+      const y = cy + Math.sin((blip.angle * Math.PI) / 180) * radius * blip.distance;
+      
+      ctx.beginPath();
+      ctx.arc(x, y, 5 * pulseSize, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff6b35';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#ff6b35';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+    
+    animationFrames.radar = requestAnimationFrame(draw);
+  }
+  
+  draw();
+}
+
+// Dashboard updates
+function startDashboardUpdates() {
+  setInterval(() => {
+    // Update stats
+    const targets = parseInt(document.getElementById('targetsDetected').textContent);
+    document.getElementById('targetsDetected').textContent = targets + Math.floor(Math.random() * 3);
+    
+    const objects = parseInt(document.getElementById('objectsTracked').textContent);
+    document.getElementById('objectsTracked').textContent = objects + Math.floor(Math.random() * 5);
+    
+    // Add detection
+    addRecentDetection();
+    addLiveActivity();
+  }, 3000);
+}
+
+function addRecentDetection() {
+  const container = document.getElementById('recentDetections');
+  const types = ['Vehicle', 'Person', 'Structure', 'Aircraft'];
+  const type = types[Math.floor(Math.random() * types.length)];
+  const conf = (Math.random() * 10 + 88).toFixed(1);
+  
+  const div = document.createElement('div');
+  div.className = 'activity-item fade-in';
+  div.innerHTML = `
+    <div class="activity-icon" style="background:rgba(255,107,53,0.15);color:#ff6b35;"><i class="fas fa-crosshairs"></i></div>
+    <div class="activity-content">
+      <div class="title"><strong class="maven">${type}</strong> detected</div>
+      <div class="meta">Confidence: ${conf}% • Just now</div>
+    </div>
+  `;
+  
+  container.insertBefore(div, container.firstChild);
+  if (container.children.length > 8) container.lastChild.remove();
+}
+
+function addLiveActivity() {
+  const container = document.getElementById('liveActivity');
+  const activities = [
+    'New track initiated on Feed 1',
+    'Pattern change detected in AOI DELTA',
+    'Object classification updated',
+    'Geofence breach alert - Grid 47'
+  ];
+  
+  const div = document.createElement('div');
+  div.className = 'feed-item fade-in';
+  div.innerHTML = `
+    <span class="timestamp">${new Date().toTimeString().split(' ')[0]}</span>
+    <span class="source">[MAVEN]</span>
+    <span class="content">${activities[Math.floor(Math.random() * activities.length)]}</span>
+  `;
+  
+  container.insertBefore(div, container.firstChild);
+  if (container.children.length > 10) container.lastChild.remove();
+}
+
+// ============================================================
+// MAVEN LIVE FMV
+// ============================================================
+function initMavenLive() {
+  if (chartsInitialized.mavenLive) return;
+  chartsInitialized.mavenLive = true;
+  
+  startVideoFeed(1);
+  startVideoFeed(2);
+  startDetectionLog();
+}
+
+function startVideoFeed(feedNum) {
+  const canvas = document.getElementById(`videoCanvas${feedNum}`);
+  const ctx = canvas.getContext('2d');
+  let frame = 0;
+  let detections = 0;
+  
+  function draw() {
+    frame++;
+    
+    // Simulate video (moving gradient)
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, `hsl(${(frame + feedNum * 60) % 360}, 20%, 15%)`);
+    gradient.addColorStop(0.5, `hsl(${(frame + feedNum * 60 + 30) % 360}, 25%, 20%)`);
+    gradient.addColorStop(1, `hsl(${(frame + feedNum * 60 + 60) % 360}, 20%, 15%)`);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add noise
+    for (let i = 0; i < 100; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.1})`;
+      ctx.fillRect(x, y, 2, 2);
+    }
+    
+    // Update time
+    document.getElementById(`feed${feedNum}Time`).textContent = new Date().toTimeString().split(' ')[0];
+    
+    // Random detections
+    if (Math.random() > 0.85) {
+      addDetectionBox(feedNum);
+      detections++;
+      document.getElementById(`feed${feedNum}Detections`).textContent = detections;
+    }
+    
+    animationFrames[`video${feedNum}`] = requestAnimationFrame(draw);
+  }
+  
+  draw();
+}
+
+function addDetectionBox(feedNum) {
+  const container = document.getElementById(`detectionBoxes${feedNum}`);
+  const objects = ['Vehicle', 'Person', 'Structure', 'Aircraft'];
+  const obj = objects[Math.floor(Math.random() * objects.length)];
+  const conf = (Math.random() * 10 + 88).toFixed(1);
+  
+  const div = document.createElement('div');
+  div.className = 'detection-box';
+  div.style.left = `${Math.random() * 70 + 10}%`;
+  div.style.top = `${Math.random() * 60 + 10}%`;
+  div.style.width = `${Math.random() * 15 + 10}%`;
+  div.style.height = `${Math.random() * 12 + 8}%`;
+  div.innerHTML = `
+    <div class="detection-label">${obj}</div>
+    <div class="detection-confidence">${conf}%</div>
+  `;
+  
+  container.appendChild(div);
+  
+  // Remove after 3 seconds
+  setTimeout(() => div.remove(), 3000);
+  
+  // Add to log
+  addToDetectionLog(feedNum, obj, conf);
+}
+
+function startDetectionLog() {
+  // Initial empty state
+  document.getElementById('detectionLogBody').innerHTML = '';
+}
+
+function addToDetectionLog(feed, obj, conf) {
+  const tbody = document.getElementById('detectionLogBody');
+  const now = new Date().toTimeString().split(' ')[0];
+  const lat = (36 + Math.random() * 2).toFixed(4);
+  const lon = (37 + Math.random() * 2).toFixed(4);
+  
+  const row = document.createElement('tr');
+  row.className = 'fade-in';
+  row.innerHTML = `
+    <td class="mono">${now}</td>
+    <td>Feed ${feed}</td>
+    <td><span class="tag maven">${obj}</span></td>
+    <td class="mono">${conf}%</td>
+    <td class="mono">${lat}°N ${lon}°E</td>
+    <td><button class="btn btn-sm btn-ghost"><i class="fas fa-crosshairs"></i> Track</button></td>
+  `;
+  
+  tbody.insertBefore(row, tbody.firstChild);
+  if (tbody.children.length > 20) tbody.lastChild.remove();
+}
+
+// ============================================================
+// MAVEN ISR
+// ============================================================
+let isrMap;
+function initMavenISR() {
+  if (isrMap) return;
+  
+  isrMap = L.map('isrMap', { center: [35.0, 38.0], zoom: 5 });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(isrMap);
+  
+  // Add coverage circles
+  L.circle([36.2, 37.1], {
+    radius: 50000,
+    color: '#ff6b35',
+    fillColor: '#ff6b35',
+    fillOpacity: 0.1
+  }).addTo(isrMap);
+  
+  setTimeout(() => isrMap.invalidateSize(), 200);
+  
+  // Start heatmap
+  startHeatmap();
+  
+  // Update stats
+  setInterval(() => {
+    const obs = parseInt(document.getElementById('totalObs').textContent.replace(',', ''));
+    document.getElementById('totalObs').textContent = (obs + Math.floor(Math.random() * 5)).toLocaleString();
+    document.getElementById('obsIncrease').textContent = Math.floor(Math.random() * 20 + 120);
+  }, 5000);
+}
+
+function startHeatmap() {
+  const canvas = document.getElementById('heatmapCanvas');
+  const ctx = canvas.getContext('2d');
+  const points = [];
+  
+  // Generate random heat points
+  for (let i = 0; i < 15; i++) {
+    points.push({
+      x: Math.random(),
+      y: Math.random(),
+      intensity: Math.random()
+    });
+  }
+  
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+    
+    ctx.fillStyle = '#0a0e17';
+    ctx.fillRect(0, 0, w, h);
+    
+    // Draw heat points
+    points.forEach(p => {
+      const grad = ctx.createRadialGradient(p.x * w, p.y * h, 0, p.x * w, p.y * h, 50);
+      grad.addColorStop(0, `rgba(255, 107, 53, ${p.intensity})`);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+      
+      // Slowly change intensity
+      p.intensity += (Math.random() - 0.5) * 0.01;
+      p.intensity = Math.max(0.2, Math.min(0.8, p.intensity));
+    });
+    
+    animationFrames.heatmap = requestAnimationFrame(draw);
+  }
+  
+  draw();
+}
+
+// ============================================================
+// MAVEN TARGETING
+// ============================================================
+function initMavenTargeting() {
+  if (chartsInitialized.targeting) return;
+  chartsInitialized.targeting = true;
+  
+  // Add initial targets
+  for (let i = 0; i < 5; i++) {
+    addTarget();
+  }
+  
+  // Add new targets periodically
+  setInterval(() => {
+    if (Math.random() > 0.6) addTarget();
+  }, 8000);
+}
+
+function addTarget() {
+  const tbody = document.getElementById('targetTableBody');
+  const types = ['Vehicle Convoy', 'Personnel Group', 'Structure', 'Aircraft', 'Vessel'];
+  const priorities = ['Critical', 'High', 'Medium'];
+  
+  const tgtNum = 200 + tbody.children.length;
+  const type = types[Math.floor(Math.random() * types.length)];
+  const priority = priorities[Math.floor(Math.random() * priorities.length)];
+  const conf = (Math.random() * 10 + 88).toFixed(1);
+  const lat = (36 + Math.random() * 5).toFixed(4);
+  const lon = (37 + Math.random() * 5).toFixed(4);
+  
+  const row = document.createElement('tr');
+  row.className = 'fade-in';
+  row.innerHTML = `
+    <td><strong>TGT-2024-${tgtNum}</strong></td>
+    <td><span class="tag maven">${type}</span></td>
+    <td><span class="tag ${priority === 'Critical' ? 'red' : priority === 'High' ? 'amber' : 'blue'}">${priority}</span></td>
+    <td class="mono">${conf}%</td>
+    <td class="mono">${lat}°N ${lon}°E</td>
+    <td><span class="status"><span class="status-dot green"></span> Tracking</span></td>
+  `;
+  
+  tbody.insertBefore(row, tbody.firstChild);
+  if (tbody.children.length > 15) tbody.lastChild.remove();
+}
+
+// ============================================================
+// MAVEN ANALYTICS
+// ============================================================
+function initMavenAnalytics() {
+  if (chartsInitialized.analytics) return;
+  chartsInitialized.analytics = true;
+  
+  // Trend chart
+  new Chart(document.getElementById('trendChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: Array.from({length:24}, (_,i) => `${i}:00`),
+      datasets: [{
+        label: 'Detections',
+        data: Array.from({length:24}, () => Math.floor(Math.random()*50+30)),
+        borderColor: '#ff6b35',
+        backgroundColor: 'rgba(255,107,53,0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8' } } },
+      scales: {
+        x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(42,58,82,0.3)' } },
+        y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(42,58,82,0.3)' } }
+      }
+    }
+  });
+  
+  // Classification chart
+  new Chart(document.getElementById('classChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Vehicles', 'Personnel', 'Structures', 'Aircraft'],
+      datasets: [{
+        data: [45, 25, 20, 10],
+        backgroundColor: ['#ff6b35', '#06b6d4', '#10b981', '#f59e0b'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
+    }
+  });
+  
+  // Speed gauge
+  new Chart(document.getElementById('speedChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['FPS'],
+      datasets: [{
+        label: 'Processing Speed',
+        data: [87],
+        backgroundColor: '#ff6b35',
+        borderWidth: 0
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { max: 100, ticks: { color: '#64748b' } },
+        y: { ticks: { color: '#94a3b8' } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// MAVEN FEED
+// ============================================================
+let feedStats = { total: 0, MAVEN: 0, SIGINT: 0, IMINT: 0, GEOINT: 0 };
+let messageRate = 0;
+
+function initMavenFeed() {
+  if (chartsInitialized.feed) return;
+  chartsInitialized.feed = true;
+  
+  setInterval(() => {
+    const sources = ['MAVEN', 'MAVEN', 'MAVEN', 'SIGINT', 'IMINT', 'GEOINT'];
+    const source = sources[Math.floor(Math.random() * sources.length)];
+    
+    const messages = {
+      MAVEN: [
+        'Detection: Vehicle identified with {c}% confidence',
+        'Track update: TGT-{n} velocity {v} m/s bearing {b}°',
+        'Pattern analysis: Movement deviation detected',
+        'Alert: High-value target in AOI DELTA-3',
+        'Classification: Personnel group (6-8 pax) detected'
+      ],
+      SIGINT: ['Intercept: Voice traffic freq {f} MHz', 'COMINT: Encrypted burst transmission'],
+      IMINT: ['Satellite imagery: Activity at facility {n}', 'UAV imagery: Vehicle movement'],
+      GEOINT: ['Location update: Entity at {lat}°N {lon}°E', 'Geofence breach alert']
+    };
+    
+    const templates = messages[source];
+    let content = templates[Math.floor(Math.random() * templates.length)];
+    content = content
+      .replace('{c}', (Math.random() * 10 + 88).toFixed(1))
+      .replace('{n}', Math.floor(Math.random() * 1000))
+      .replace('{v}', (Math.random() * 30 + 10).toFixed(1))
+      .replace('{b}', Math.floor(Math.random() * 360))
+      .replace('{f}', (Math.random() * 1000 + 100).toFixed(2))
+      .replace('{lat}', (36 + Math.random() * 2).toFixed(4))
+      .replace('{lon}', (37 + Math.random() * 2).toFixed(4));
+    
+    addFeedMessage(source, content);
+  }, 600);
+  
+  setInterval(() => {
+    document.getElementById('feedRate').textContent = messageRate.toFixed(1);
+    messageRate = 0;
+  }, 1000);
+}
+
+function addFeedMessage(source, content) {
+  const container = document.getElementById('liveFeedContainer');
+  const now = new Date().toTimeString().split(' ')[0];
+  
+  const div = document.createElement('div');
+  div.className = 'feed-item fade-in';
+  div.innerHTML = `
+    <span class="timestamp">${now}</span>
+    <span class="source">[${source}]</span>
+    <span class="content">${content}</span>
+  `;
+  
+  container.insertBefore(div, container.firstChild);
+  if (container.children.length > 100) container.lastChild.remove();
+  
+  feedStats.total++;
+  feedStats[source]++;
+  messageRate += 1.67;
+  
+  document.getElementById('totalMessages').textContent = feedStats.total;
+  document.getElementById('mavenCount').textContent = feedStats.MAVEN;
+  document.getElementById('sigintCount').textContent = feedStats.SIGINT;
+  document.getElementById('imintCount').textContent = feedStats.IMINT;
+  document.getElementById('geointCount').textContent = feedStats.GEOINT;
+}
+
+// ============================================================
+// MAP
+// ============================================================
+let mainMap;
+function initMap() {
+  if (mainMap) return;
+  mainMap = L.map('mainMap', { center: [35.0, 38.0], zoom: 5 });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mainMap);
+  setTimeout(() => mainMap.invalidateSize(), 200);
+}
+
+// ============================================================
+// AI CHAT
+// ============================================================
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const container = document.getElementById('chatMessages');
+  container.innerHTML += `
+    <div class="chat-msg user fade-in">
+      <div class="chat-msg-avatar">OA</div>
+      <div class="chat-msg-body">${msg}</div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    container.innerHTML += `
+      <div class="chat-msg ai fade-in">
+        <div class="chat-msg-avatar"><i class="fas fa-robot"></i></div>
+        <div class="chat-msg-body">Based on current Maven feed analysis:<br><br>• <strong>342 objects</strong> currently tracked<br>• <strong>127 targets</strong> identified in last 24h<br>• <strong>96.8% average</strong> detection confidence<br>• <strong>3 high-priority</strong> alerts require review<br><br>All systems nominal. Would you like detailed analysis on any specific target or AOI?</div>
+      </div>
+    `;
+    container.scrollTop = container.scrollHeight;
+  }, 1000);
+
+  container.scrollTop = container.scrollHeight;
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function toggleNotifications() {
+  document.getElementById('notifPanel').classList.toggle('open');
+  document.getElementById('notifContent').innerHTML = `
+    <div class="notif-item"><div class="notif-title" style="color:#ff6b35;"><i class="fas fa-crosshairs"></i> New Target Detected</div><div class="notif-body">TGT-2024-205 classified as high-priority vehicle convoy</div><div class="notif-time">1 min ago • Maven</div></div>
+    <div class="notif-item"><div class="notif-title" style="color:#ff6b35;"><i class="fas fa-video"></i> Detection Spike</div><div class="notif-body">43 objects detected on Feed 1 in last 5 minutes</div><div class="notif-time">3 min ago • Maven</div></div>
+    <div class="notif-item"><div class="notif-title" style="color:#ff6b35;"><i class="fas fa-chart-line"></i> Pattern Alert</div><div class="notif-body">Unusual movement pattern detected in AOI DELTA-3</div><div class="notif-time">8 min ago • Maven</div></div>
+  `;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', () => {
+  initDashboard();
+});
+
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('globalSearch').focus();
+  }
+});
+</script>
+
+</body>
+</html>
